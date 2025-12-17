@@ -10,8 +10,12 @@ import {
   RISK_TOLERANCE_OPTIONS,
 } from "@/lib/constants";
 import { useForm } from "react-hook-form";
+import { signUpWithEmail } from "@/lib/actions/auth.actions";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 const SignUpPage = () => {
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -31,16 +35,18 @@ const SignUpPage = () => {
   });
   const onSubmit = async (data: SignUpFormData) => {
     try {
-      // const response = await fetch("/api/auth/signup", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify(data),
-      // });
-      console.log(data);
+      const result = await signUpWithEmail(data);
+      if (result.success) {
+        console.log("User signed up successfully:", result.data);
+        router.push("/");
+      } else {
+        console.error("Failed to sign up:", result.error);
+      }
     } catch (error) {
       console.error("Error signing up:", error);
+      toast.error("Sign-up failed", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   };
   return (
