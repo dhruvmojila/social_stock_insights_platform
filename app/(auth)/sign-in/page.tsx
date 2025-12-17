@@ -66,7 +66,6 @@ const SignIn = () => {
         />
 
         <Button
-          onClick={handleSubmit(onSubmit)}
           type="submit"
           disabled={isSubmitting}
           className="yellow-btn w-full mt-5"
