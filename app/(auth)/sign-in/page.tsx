@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import InputField from "@/components/forms/InputField";
 import FooterLink from "@/components/forms/FooterLink";
 import { useRouter } from "next/navigation";
+import { signInWithEmail } from "@/lib/actions/auth.actions";
+import { toast } from "sonner";
 
 const SignIn = () => {
   const router = useRouter();
@@ -22,8 +24,18 @@ const SignIn = () => {
 
   const onSubmit = async (data: SignInFormData) => {
     try {
-    } catch (e) {
-      console.error(e);
+      const result = await signInWithEmail(data);
+      if (result.success) {
+        console.log("User signed in successfully:", result.data);
+        router.push("/");
+      } else {
+        console.error("Failed to sign in:", result.error);
+      }
+    } catch (error) {
+      console.error("Error signing in:", error);
+      toast.error("Sign-in failed", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   };
 
@@ -40,7 +52,6 @@ const SignIn = () => {
           error={errors.email}
           validation={{
             required: "Email is required",
-            pattern: /^\w+@\w+\.\w+$/,
           }}
         />
 
@@ -55,6 +66,7 @@ const SignIn = () => {
         />
 
         <Button
+          onClick={handleSubmit(onSubmit)}
           type="submit"
           disabled={isSubmitting}
           className="yellow-btn w-full mt-5"
