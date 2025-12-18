@@ -13,7 +13,12 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Star, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { searchStocks } from "@/lib/actions/finnhub.actions";
+import {
+  addToWatchlist,
+  removeFromWatchlist,
+} from "@/lib/actions/watchlist.actions";
 import { useDebounce } from "@/hooks/useDebounce";
+import { toast } from "sonner";
 
 export function SearchCommand({
   label = "Add Stock",
@@ -65,6 +70,45 @@ export function SearchCommand({
     setOpen(false);
     setSearchTerm("");
     setStocks(initialStocks);
+  };
+
+  const toggleWatchlist = async (
+    e: React.MouseEvent,
+    stock: StockWithWatchlistStatus
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const previousStocks = [...stocks];
+    setStocks((prev) =>
+      prev.map((s) =>
+        s.symbol === stock.symbol
+          ? { ...s, isInWatchlist: !s.isInWatchlist }
+          : s
+      )
+    );
+
+    try {
+      if (stock.isInWatchlist) {
+        const result = await removeFromWatchlist(stock.symbol);
+        if (result.success) {
+          toast.success(`${stock.symbol} removed from watchlist`);
+        } else {
+          throw new Error(result.error);
+        }
+      } else {
+        const result = await addToWatchlist(stock.symbol, stock.name);
+        if (result.success) {
+          toast.success(`${stock.symbol} added to watchlist`);
+        } else {
+          throw new Error(result.error);
+        }
+      }
+    } catch (error: any) {
+      setStocks(previousStocks);
+      toast.error(error?.message || "Failed to update watchlist");
+      console.error(error);
+    }
   };
 
   return (
@@ -122,7 +166,18 @@ export function SearchCommand({
                           {stock.symbol} | {stock.exchange} | {stock.type}
                         </div>
                       </div>
-                      {/* <Star /> */}
+                      <div
+                        onClick={(e) => toggleWatchlist(e, stock)}
+                        className="p-2 cursor-pointer hover:bg-muted rounded-full transition-colors"
+                      >
+                        <Star
+                          className={`h-4 w-4 ${
+                            stock.isInWatchlist
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-gray-400"
+                          }`}
+                        />
+                      </div>
                     </Link>
                   </li>
                 ))}

@@ -9,38 +9,33 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WATCHLIST_TABLE_HEADER } from "@/lib/constants";
-import React from "react";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import { removeFromWatchlist } from "@/lib/actions/watchlist.actions";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { formatTimeAgo } from "@/lib/utils";
 
-const WatchlistTable = () => {
-  const sampleData = [
-    {
-      company: "Apple Inc.",
-      symbol: "AAPL",
-      price: "$175.00",
-      change: "+1.25%",
-      marketCap: "$2.8T",
-      peRatio: "28.5",
-      alert: "Price > $180",
-    },
-    {
-      company: "Microsoft Corp.",
-      symbol: "MSFT",
-      price: "$320.00",
-      change: "-0.50%",
-      marketCap: "$2.4T",
-      peRatio: "32.1",
-      alert: "None",
-    },
-    {
-      company: "Tesla Inc.",
-      symbol: "TSLA",
-      price: "$240.00",
-      change: "+2.10%",
-      marketCap: "$750B",
-      peRatio: "50.2",
-      alert: "Price < $230",
-    },
-  ];
+interface WatchlistTableProps {
+  watchlist: any[];
+}
+
+const WatchlistTable = ({ watchlist }: WatchlistTableProps) => {
+  const router = useRouter();
+
+  const handleRemove = async (symbol: string) => {
+    try {
+      const result = await removeFromWatchlist(symbol);
+      if (result.success) {
+        toast.success(`${symbol} removed from watchlist`);
+        router.refresh();
+      } else {
+        toast.error(result.error || "Failed to remove");
+      }
+    } catch (error) {
+      toast.error("Failed to remove from watchlist");
+    }
+  };
 
   return (
     <div className="w-full">
@@ -55,22 +50,45 @@ const WatchlistTable = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sampleData.map((row) => (
-            <TableRow key={row.symbol}>
-              <TableCell className="text-left font-medium">
-                {row.company}
+          {watchlist.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={WATCHLIST_TABLE_HEADER.length}
+                className="text-center py-8 text-muted-foreground"
+              >
+                Your watchlist is empty. Add stocks using the search command
+                (Cmd+K).
               </TableCell>
-              <TableCell className="text-left">{row.symbol}</TableCell>
-              <TableCell className="text-left">{row.price}</TableCell>
-              <TableCell className="text-left text-green-500">
-                {row.change}
-              </TableCell>
-              <TableCell className="text-left">{row.marketCap}</TableCell>
-              <TableCell className="text-left">{row.peRatio}</TableCell>
-              <TableCell className="text-left">{row.alert}</TableCell>
-              <TableCell className="text-left">...</TableCell>
             </TableRow>
-          ))}
+          ) : (
+            watchlist.map((row) => (
+              <TableRow key={row.symbol}>
+                <TableCell className="text-left font-medium">
+                  {row.company}
+                </TableCell>
+                <TableCell className="text-left">{row.symbol}</TableCell>
+                <TableCell className="text-left">-</TableCell>
+                <TableCell className="text-left">-</TableCell>
+                <TableCell className="text-left">-</TableCell>
+                <TableCell className="text-left">-</TableCell>
+                <TableCell className="text-left">
+                  {row.addedAt
+                    ? formatTimeAgo(new Date(row.addedAt).getTime() / 1000)
+                    : "-"}
+                </TableCell>
+                <TableCell className="text-left">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemove(row.symbol)}
+                    className="hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>
