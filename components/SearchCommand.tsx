@@ -111,8 +111,8 @@ export function SearchCommand({
                 {displayStocks?.map((stock, i) => (
                   <li key={stock.symbol} className="search-item">
                     <Link
-                      href={`/stock/${stock.symbol}`}
                       onSelect={handleSelectStock}
+                      href={`/stocks/${stock.symbol}`}
                       className="search-item-link"
                     >
                       <TrendingUp className="h-4 w-4 text-gray-500" />
